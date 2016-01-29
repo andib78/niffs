@@ -140,11 +140,18 @@
   ((_pix) % (_fs)->pages_per_sector)
 #define _NIFFS_PIX_AT_SECTOR(_fs, _s) \
   ((_s) * (_fs)->pages_per_sector)
+#if 0
 #define _NIFFS_PIX_2_ADDR(_fs, _pix) (\
   _NIFFS_SECTOR_2_ADDR(_fs, _NIFFS_PIX_2_SECTOR(_fs, _pix)) +  \
   sizeof(niffs_sector_hdr) + \
   _NIFFS_PIX_IN_SECTOR(_fs, _pix) * fs->page_size \
   )
+#endif
+// Constant offset within page. wastes 4 bytes per page.
+#define _NIFFS_PIX_2_ADDR(_fs, _pix) ( (_fs)->phys_addr				\
+					+ ((_fs)->page_size * (_pix))		\
+					+ (sizeof(niffs_sector_hdr))		\
+	)
 
 #if 0
 #define _NIFFS_ADDR_2_PIX(_fs, _addr) (\
@@ -153,8 +160,9 @@
   )
 #endif
 
+// Constant offset within page. wastes 4 bytes per page.
 #define _NIFFS_SPIX_2_PDATA_LEN(_fs, _spix) \
-  ((_fs)->page_size - sizeof(niffs_page_hdr) - ((_spix) == 0 ? sizeof(niffs_object_hdr) : 0))
+  ((_fs)->page_size - sizeof(niffs_page_hdr) - sizeof(niffs_sector_hdr) - ((_spix) == 0 ? sizeof(niffs_object_hdr) : 0))
 
 #define _NIFFS_OFFS_2_SPIX(_fs, _offs) ( \
   (_offs) < _NIFFS_SPIX_2_PDATA_LEN(_fs, 0) ? 0 : \
