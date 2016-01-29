@@ -9,6 +9,7 @@
 #define NIFFS_H_
 
 #include "niffs_config.h"
+#include <errno.h>
 
 #define NIFFS_SEEK_SET          (0)
 #define NIFFS_SEEK_CUR          (1)
@@ -31,8 +32,26 @@
 /* If O_CREAT and O_EXCL are set, open() fails if the file exists. */
 #define NIFFS_O_EXCL                     (1<<6)
 
+// niffs file descriptor flags
+typedef u16_t niffs_fd_flags;
+
+/*! @brief Errorcodes.
+ * 
+ * The upper 16 bits are the NIFFS-Error-ID.
+ * The lower 16 bits are the corresponding errno code.
+ * 
+ */
+
+#define	NIFFS_ERR_PART_MASK			0xFFFF	//!< Mask for ERRNO coding
+#define	NIFFS_ERR_ID_OFFSET			16	//!< Offset for ID in code
+#define	NIFFS_ERR_DEF(_id_, _errno_)		(-(((_id_) & NIFFS_ERR_PART_MASK) << NIFFS_ERR_ID_OFFSET) | ((_errno_) & NIFFS_ERR_PART_MASK))
+/*! @brief Extract errno. */
+#define	NIFFS_ERR_ERRNO(_err_)			((_err_) & NIFFS_ERR_PART_MASK)
+/*! @brief Extract error-id. */
+#define	NIFFS_ERR_ID(_err_)			(-((_err_) >> NIFFS_ERR_ID_OFFSET))
 
 #define NIFFS_OK                            0
+#if 0
 #define ERR_NIFFS_BAD_CONF                  -11001
 #define ERR_NIFFS_NOT_A_FILESYSTEM          -11002
 #define ERR_NIFFS_BAD_SECTOR                -11003
@@ -69,6 +88,44 @@
 #define ERR_NIFFS_NOT_READABLE              -11034
 #define ERR_NIFFS_FILE_EXISTS               -11035
 #define ERR_NIFFS_OVERFLOW                  -11036
+#else
+#define ERR_NIFFS_BAD_CONF                  NIFFS_ERR_DEF( 1,	EINVAL)	/* Invalid argument */
+#define ERR_NIFFS_NOT_A_FILESYSTEM          NIFFS_ERR_DEF( 2,	ENODEV)	/* No such device */
+#define ERR_NIFFS_BAD_SECTOR                NIFFS_ERR_DEF( 3,	EIO)	/* I/O error */
+#define ERR_NIFFS_DELETING_FREE_PAGE        NIFFS_ERR_DEF( 4,	EIO)	/* I/O error */
+#define ERR_NIFFS_DELETING_DELETED_PAGE     NIFFS_ERR_DEF( 5,	EIO)	/* I/O error */
+#define ERR_NIFFS_MOVING_FREE_PAGE          NIFFS_ERR_DEF( 6,	EIO)	/* I/O error */
+#define ERR_NIFFS_MOVING_DELETED_PAGE       NIFFS_ERR_DEF( 7,	EIO)	/* I/O error */
+#define ERR_NIFFS_MOVING_TO_UNFREE_PAGE     NIFFS_ERR_DEF( 8,	EIO)	/* I/O error */
+#define ERR_NIFFS_MOVING_TO_SAME_PAGE       NIFFS_ERR_DEF( 9,	EIO)	/* I/O error */
+#define ERR_NIFFS_MOVING_BAD_FLAG           NIFFS_ERR_DEF(10,	EIO)	/* I/O error */
+#define ERR_NIFFS_NO_FREE_PAGE              NIFFS_ERR_DEF(11,	ENOSPC)	/* No space left on device */
+#define ERR_NIFFS_SECTOR_UNFORMATTABLE      NIFFS_ERR_DEF(12,	EIO)	/* I/O error */
+#define ERR_NIFFS_NULL_PTR                  NIFFS_ERR_DEF(13,	EINVAL)	/* Invalid argument */
+#define ERR_NIFFS_NO_FREE_ID                NIFFS_ERR_DEF(14,	EMLINK)	/* Too many links */
+#define ERR_NIFFS_WR_PHDR_UNFREE_PAGE       NIFFS_ERR_DEF(15,	EIO)	/* I/O error */
+#define ERR_NIFFS_WR_PHDR_BAD_ID            NIFFS_ERR_DEF(16,	EIO)	/* I/O error */
+#define ERR_NIFFS_NAME_CONFLICT             NIFFS_ERR_DEF(17,	EEXIST)	/* File exists */
+#define ERR_NIFFS_FULL                      NIFFS_ERR_DEF(18,	ENOSPC)	/* No space left on device */
+#define ERR_NIFFS_OUT_OF_FILEDESCS          NIFFS_ERR_DEF(19,	ENFILE)	/* Too many open files */
+#define ERR_NIFFS_FILE_NOT_FOUND            NIFFS_ERR_DEF(20,	ENOENT)	/* No such file or directory */
+#define ERR_NIFFS_FILEDESC_CLOSED           NIFFS_ERR_DEF(21,	EBADF)	/* Bad file number */
+#define ERR_NIFFS_FILEDESC_BAD              NIFFS_ERR_DEF(22,	EBADF)	/* Bad file number */
+#define ERR_NIFFS_INCOHERENT_ID             NIFFS_ERR_DEF(23,	EBADF)	/* Bad file number */
+#define ERR_NIFFS_PAGE_NOT_FOUND            NIFFS_ERR_DEF(24,	EIO)	/* I/O error */
+#define ERR_NIFFS_END_OF_FILE               NIFFS_ERR_DEF(25,	ESPIPE)	/* Illegal seek */
+#define ERR_NIFFS_MODIFY_BEYOND_FILE        NIFFS_ERR_DEF(26,	ESPIPE)	/* Illegal seek */
+#define ERR_NIFFS_TRUNCATE_BEYOND_FILE      NIFFS_ERR_DEF(27,	ESPIPE)	/* Illegal seek */
+#define ERR_NIFFS_NO_GC_CANDIDATE           NIFFS_ERR_DEF(28,	EIO)	/* I/O error */
+#define ERR_NIFFS_PAGE_DELETED              NIFFS_ERR_DEF(29,	EIO)	/* I/O error */
+#define ERR_NIFFS_PAGE_FREE                 NIFFS_ERR_DEF(30,	EIO)	/* I/O error */
+#define ERR_NIFFS_MOUNTED                   NIFFS_ERR_DEF(31,	EACCES)	/* Permission denied */
+#define ERR_NIFFS_NOT_MOUNTED               NIFFS_ERR_DEF(32,	ENODEV)	/* No such device */
+#define ERR_NIFFS_NOT_WRITABLE              NIFFS_ERR_DEF(33,	EROFS)	/* Read only file system */
+#define ERR_NIFFS_NOT_READABLE              NIFFS_ERR_DEF(34,	EACCES)	/* Permission denied */
+#define ERR_NIFFS_FILE_EXISTS               NIFFS_ERR_DEF(35,	EEXIST)	/* File exists */
+#define ERR_NIFFS_OVERFLOW                  NIFFS_ERR_DEF(36,	EFBIG)	/* File too large */
+#endif
 
 typedef int (* niffs_hal_erase_f)(u8_t *addr, u32_t len);
 typedef int (* niffs_hal_write_f)(u8_t *addr, const u8_t *src, u32_t len);
