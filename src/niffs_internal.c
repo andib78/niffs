@@ -374,6 +374,25 @@ TESTATIC int niffs_write_phdr(niffs *fs, niffs_page_ix pix, niffs_page_hdr *phdr
 }
 #endif
 
+
+extern	void		_niffs_copy_name (
+	char *		dst,	//!< [out] Destination
+	const char *	src	//!< [in] Source
+)
+{
+	// remove leading '/'
+	while (*src && (*src == '/')) { src++; }
+	
+	for (int i = 0; i < NIFFS_NAME_LEN; i++)
+	{
+		if (!(*dst++ = _NIFFS_CCC(*src++)))
+		{
+			break;
+		}
+	}
+}
+
+
 /////////////////////////////////// FILE /////////////////////////////////////
 
 int niffs_create(niffs *fs, const char *name) {
@@ -400,7 +419,7 @@ int niffs_create(niffs *fs, const char *name) {
   ohdr.phdr.id.obj_id = oid;
   ohdr.phdr.id.spix = 0;
   ohdr.len = NIFFS_UNDEF_LEN;
-  strncpy((char *)ohdr.name, (char *)name, NIFFS_NAME_LEN);
+  _niffs_copy_name((char *)ohdr.name, name);
   res = niffs_write_page(fs, pix, &ohdr.phdr,
       (u8_t *)&ohdr + offsetof(niffs_object_hdr, len),
       sizeof(niffs_object_hdr) - sizeof(niffs_page_hdr));
@@ -1046,14 +1065,17 @@ int niffs_rename(niffs *fs, const char *old_name, const char *new_name) {
 
   res = niffs_find_free_page(fs, &dst_pix, NIFFS_EXCL_SECT_NONE);
   if (res != NIFFS_OK) return res;
+  
+  _NIFFS_C_NAME(old_name, cold_name);
+  _NIFFS_C_NAME(new_name, cnew_name);
 
-  NIFFS_DBG("rename: name:%s->%s\n", old_name, new_name);
+  NIFFS_DBG("rename: name:%s->%s\n", cold_name, cnew_name);
 
   niffs_open_arg arg;
 
   // find src file
   memset(&arg, 0, sizeof(arg));
-  arg.name = old_name;
+  arg.name = cold_name;
   res = niffs_traverse(fs, 0, 0, niffs_open_v, &arg);
   if (res == NIFFS_VIS_END) {
     if (arg.oid_mov != 0) {
@@ -1069,7 +1091,7 @@ int niffs_rename(niffs *fs, const char *old_name, const char *new_name) {
 
   // find dst file
   memset(&arg, 0, sizeof(arg));
-  arg.name = new_name;
+  arg.name = cnew_name;
   res = niffs_traverse(fs, 0, 0, niffs_open_v, &arg);
   if (res == NIFFS_VIS_END) {
     if (arg.oid_mov == 0) {
@@ -1086,7 +1108,7 @@ int niffs_rename(niffs *fs, const char *old_name, const char *new_name) {
   // modify obj hdr
   niffs_page_hdr *src_phdr_addr = (niffs_page_hdr *) _NIFFS_PIX_2_ADDR(fs, src_pix);
   _NIFFS_RD(fs, fs->buf, (u8_t *)src_phdr_addr, fs->page_size);
-  strncpy((char *)fs->buf + offsetof(niffs_object_hdr, name), new_name, NIFFS_NAME_LEN);
+  strncpy((char *)fs->buf + offsetof(niffs_object_hdr, name), cnew_name, NIFFS_NAME_LEN);
 
   // move and rewrite
   res = niffs_move_page(fs, src_pix, dst_pix, fs->buf + sizeof(niffs_page_hdr),

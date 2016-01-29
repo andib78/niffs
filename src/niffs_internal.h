@@ -200,6 +200,40 @@
 #define NIFFS_EXCL_SECT_NONE  (u32_t)-1
 #define NIFFS_UNDEF_LEN       (u32_t)-1
 
+/////////////////////////////////// NAME /////////////////////////////////////
+
+/*! @brief Convert character case. */
+#if (NIFFS_NAME_CASE == NIFFS_NAME_CASE_SENSITIVE)
+#define	_NIFFS_CCC(_c_)	(_c_)
+#elif (NIFFS_NAME_CASE == NIFFS_NAME_CASE_UPPER)
+#define	_NIFFS_CCC(_c_)	toupper((int) (_c_))
+#elif (NIFFS_NAME_CASE == NIFFS_NAME_CASE_LOWER)
+#define	_NIFFS_CCC(_c_)	tolower((int) (_c_))
+#else
+# error "NIFFS_NAME_CASE invalid"
+#endif
+
+
+/*! @brief Copy Name.
+ * 
+ * Respects Case-Sensitivity.
+ */
+extern	void		_niffs_copy_name (
+	char *		dst,	//!< [out] Destination
+	const char *	src	//!< [in] Source
+);
+
+#if (NIFFS_NAME_CASE == NIFFS_NAME_CASE_SENSITIVE)
+# define	_NIFFS_C_NAME(_invar_, _outvar_)	const char *	_outvar_ = _invar_;
+#else
+# define	_NIFFS_C_NAME(_invar_, _outvar_)	char _outvar_ [NIFFS_NAME_LEN];	\
+	do {									\
+		_niffs_copy_name(_outvar_, _invar_);					\
+	} while (false)
+#endif
+
+
+
 typedef struct {
   _NIFFS_ALIGN niffs_erase_cnt era_cnt;
   _NIFFS_ALIGN niffs_magic abra; // page size xored with magic
