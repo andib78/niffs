@@ -638,7 +638,14 @@ int niffs_append(niffs *fs, int fd_ix, const u8_t *src, u32_t len) {
   if (len == 0) return NIFFS_OK;
   u8_t *orig_ohdr_addr = (u8_t *)_NIFFS_PIX_2_ADDR(fs, fd->obj_pix);
   niffs_object_hdr *orig_ohdr = (niffs_object_hdr *)_NIFFS_ALLO_PIX(fs, fd->obj_pix, sizeof(niffs_object_hdr));
-  if (orig_ohdr->phdr.id.obj_id != fd->obj_id) return ERR_NIFFS_INCOHERENT_ID;
+  if (orig_ohdr->phdr.id.obj_id != fd->obj_id) 
+  {
+	  NIFFS_DBG("incoherent ID: fd=%u orig_objheader=%u; fd->obj_pix=%u", 
+		   fd->obj_id, orig_ohdr->phdr.id.obj_id,
+		   fd->obj_pix
+		  );
+	  return ERR_NIFFS_INCOHERENT_ID;
+  }
   niffs_page_ix orig_obj_pix = fd->obj_pix;
 
   // CHECK SPACE
@@ -679,7 +686,7 @@ int niffs_append(niffs *fs, int fd_ix, const u8_t *src, u32_t len) {
   // operate on per page basis
   while (res == NIFFS_OK && written < len) {
     u32_t avail;
-
+    
     // case 1: newly created empty file, fill in object header
     if (file_offs + data_offs == 0) {
       // just fill up obj header
