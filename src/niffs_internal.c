@@ -260,9 +260,14 @@ TESTATIC int niffs_delete_page(niffs *fs, niffs_page_ix pix) {
 TESTATIC int niffs_move_page(niffs *fs, niffs_page_ix src_pix, niffs_page_ix dst_pix, const u8_t *data, u32_t len, niffs_flag force_flag) {
   if (src_pix == dst_pix) return ERR_NIFFS_MOVING_TO_SAME_PAGE;
 
-  niffs_page_hdr *src_phdr = (niffs_page_hdr *)_NIFFS_ALLO_PIX(fs, src_pix, sizeof(niffs_page_hdr));
-  niffs_page_hdr *dst_phdr = (niffs_page_hdr *)_NIFFS_ALLO_PIX(fs, dst_pix, sizeof(niffs_page_hdr));
 
+  // copy on stack to prevent flash read accesses durch write operation.
+  niffs_page_hdr src_phdr_cpy = *((niffs_page_hdr *)_NIFFS_PIX_2_ADDR(fs, src_pix));
+  niffs_page_hdr *src_phdr = &src_phdr_cpy;
+  
+  niffs_page_hdr dst_phdr_cpy = *((niffs_page_hdr *)_NIFFS_PIX_2_ADDR(fs, dst_pix));
+  niffs_page_hdr *dst_phdr = &dst_phdr_cpy;
+    
   int res = NIFFS_OK;
   if (!_NIFFS_IS_FLAG_VALID(src_phdr) || !_NIFFS_IS_FLAG_VALID(dst_phdr)) res = ERR_NIFFS_MOVING_BAD_FLAG;
   else if (_NIFFS_IS_FREE(src_phdr))  res = ERR_NIFFS_MOVING_FREE_PAGE;
