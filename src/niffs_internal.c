@@ -802,13 +802,23 @@ int niffs_append(niffs *fs, int fd_ix, const u8_t *src, u32_t len) {
 
     dst_ohdr_addr = (u8_t *)_NIFFS_PIX_2_ADDR(fs, new_pix);
 
+    // since we don't only copy the data section, we must
+    // substract the current page begin offset.
+    // otherwise invalid data is written to an unexpected location.
+    size_t	padoff = ((ptrdiff_t)orig_ohdr_addr % fs->page_size);
     // copy from old hdr
-    _NIFFS_RD(fs, fs->buf, orig_ohdr_addr, fs->page_size);
+    _NIFFS_RD(fs, fs->buf, orig_ohdr_addr, fs->page_size - padoff);
 
     ((niffs_object_hdr *)fs->buf)->len = len + file_offs;
 
     // move header page, rewrite length data
-    res = niffs_move_page(fs, fd->obj_pix, new_pix, fs->buf + sizeof(niffs_page_hdr), fs->page_size - sizeof(niffs_page_hdr), _NIFFS_FLAG_WRITTEN);
+    res = niffs_move_page(fs, 
+			  fd->obj_pix, 
+			  new_pix, 
+			  fs->buf + sizeof(niffs_page_hdr), 
+			  fs->page_size - sizeof(niffs_page_hdr) - padoff, 
+			  _NIFFS_FLAG_WRITTEN
+	);
     _NIFFS_ERR_FREE_RETURN(fs, orig_ohdr, res);
   } else {
     // just fill in clean object header
@@ -1750,11 +1760,12 @@ int NIFFS_init(niffs *fs, u8_t *phys_addr, u32_t sectors, u32_t sector_size, u32
   memset(descs, 0, file_desc_len * sizeof(niffs_file_desc));
 
   // calculate actual page size incl page header - leave room for sector header
-  if (sector_size % page_size < sizeof(niffs_sector_hdr)) {
-    fs->page_size = page_size
-        /* int part */  - (sizeof(niffs_sector_hdr) / pages_per_sector)
-        /* frac part */ - ((sizeof(niffs_sector_hdr) % pages_per_sector) != 0 ? 1 : 0);
-  } else {
+//  if (sector_size % page_size < sizeof(niffs_sector_hdr)) {
+//    fs->page_size = page_size
+//        /* int part */  - (sizeof(niffs_sector_hdr) / pages_per_sector)
+//        /* frac part */ - ((sizeof(niffs_sector_hdr) % pages_per_sector) != 0 ? 1 : 0);
+//  } else 
+  {
     fs->page_size = page_size;
   }
   fs->page_size = fs->page_size & (~(NIFFS_WORD_ALIGN-1));
