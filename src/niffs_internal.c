@@ -308,7 +308,7 @@ TESTATIC int niffs_move_page(niffs *fs, niffs_page_ix src_pix, niffs_page_ix dst
   if (data == 0 && (!src_clear || !src_phdr->id.spix != 0)) {
     // .. page data ..
 #ifndef NIFFS_RD_ALLO_TEST
-    res = fs->hal_wr((u8_t *)_NIFFS_PIX_2_ADDR(fs, dst_pix) + sizeof(niffs_page_hdr), (u8_t *)src_phdr  + sizeof(niffs_page_hdr), fs->page_size - sizeof(niffs_page_hdr));
+	res = fs->hal_wr((u8_t *)_NIFFS_PIX_2_ADDR(fs, dst_pix) + sizeof(niffs_page_hdr), (u8_t *)src_phdr  + sizeof(niffs_page_hdr),  _NIFFS_SPIX_2_PDATA_LEN(fs, 1));
 #else
     _NIFFS_RD(fs,
         fs->rd_buf,
