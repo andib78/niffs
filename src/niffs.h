@@ -178,11 +178,11 @@ int NIFFS_creat(niffs *fs, char *name, niffs_mode mode);
  * @param fs            the file system struct
  * @param path          the path of the new file
  * @param flags         the flags for the open command, can be combinations of
- *                      NIFFS_APPEND, NIFFS_TRUNC, NIFFS_CREAT, SPIFFS_RD_ONLY,
- *                      NIFFS_WR_ONLY, NIFFS_RDWR, NIFFS_DIRECT
+ *                      NIFFS_O_APPEND, NIFFS_O_TRUNC, NIFFS_O_CREAT, NIFFS_O_RDONLY,
+ *                      NIFFS_O_WRONLY, NIFFS_O_RDWR, NIFFS_O_DIRECT or NIFFS_O_EXCL
  * @param mode          ignored, for posix compliance
  */
-int NIFFS_open(niffs *fs, const char *name, u8_t flags, niffs_mode mode);
+int NIFFS_open(niffs *fs, const char *name, niffs_fd_flags flags, niffs_mode mode);
 
 /**
  * Returns a pointer directly to the flash where data resides, and how many

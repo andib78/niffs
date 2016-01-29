@@ -27,7 +27,7 @@ int NIFFS_creat(niffs *fs, char *name, niffs_mode mode) {
   return res;
 }
 
-int NIFFS_open(niffs *fs, const char *name, u8_t flags, niffs_mode mode) {
+int NIFFS_open(niffs *fs, const char *name, niffs_fd_flags flags, niffs_mode mode) {
   (void)mode;
   if (!fs->mounted) return ERR_NIFFS_NOT_MOUNTED;
   int res = NIFFS_OK;
